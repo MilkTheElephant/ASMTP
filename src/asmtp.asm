@@ -19,7 +19,7 @@
 global _start
 
 %include 'data.inc'
-%include 'funcs.inc'
+;%include 'funcs.inc'
 
 section .text 
 
@@ -76,7 +76,10 @@ open_socket:
     int 80h
 
     mov edx, eax ; move socket file desc to edx
-    mov [sock_desc], edx
+
+    mov eax, sock_desc ;round about way of making sock_desc* == file_descriptor
+    mov [eax], edx
+    
 
     cmp eax, -1 ; make sure that we didnt error.
     je error
@@ -140,7 +143,7 @@ accept:
 
     mov edx, eax            ;save result in edx
 
-greet:
+greet_str:
     
     mov esi, CMD_220        ;point esi to string we're moving
     mov edi, send_buffer      ;point edi to where we're moving it to.
@@ -164,14 +167,19 @@ greet:
     mov ebx, 1
     mov eax, 4
     int 80h
-    popa    
+    popa
     
+    ;call send
+     
+       
+    
+
 send: 
     
     push 0                  ;flags arg (not required)
     push SIZE_OF_SEND_BUFF   ;push arguments
     push send_buffer
-    ;mov edx, [sock_desc]
+    mov edx, [sock_desc]
     push edx
     
     mov ecx, esp            ;save pointer to args
@@ -218,31 +226,25 @@ recv:
 
 start_talking:
 
-    mov al, '2'
-    mov ebx, rec_buffer
-    mov ah, BYTE [ebx]
-    cmp ah, al
-    ;jne error
-    
-    mov al, '2'
+    mov al, 'H'             ;move H to al
+    mov ebx, rec_buffer     ;make ebx = rec_buff
+    mov ah, BYTE [ebx]      ;move the byte pointed to by ebx into AH
+    cmp ah, al              ;compare ah and al 
+    jne error               ; not equal? Error.
+                            ;else continue
+    mov al, 'E'
     mov ah, BYTE [ebx+1]
     cmp ah, al
-    ;jne error
+    jne error
     
-    mov al, '0'
+    mov al, 'L'
     mov ah, BYTE [ebx+2]
     cmp ah, al
-    ;jne error
+    jne error
 
-    ;mov eax, '2'
-    ;mov ebx, [rec_buffer+1]
-    ;cmp eax, ebx
-    ;jne error
-    ;mov eax, '0'
-    ;mov ebx, [rec_buffer+2]
-    ;cmp eax, ebx
-    ;jne error
-
+    mov al, 'O'
+    mov ah, BYTE [ebx+2]
+    cmp ah, al
 
     pusha
     xor ecx, ecx
@@ -252,6 +254,7 @@ start_talking:
     mov eax, 4
     int 80h
     popa    
+
 
 
      

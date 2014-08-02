@@ -20,4 +20,29 @@
 ;This header file contains a lot of the functions required to make ASMTP work.
 ;Things like getting string lengths, combining strings and other such magical stuff.
 
+section .text
 
+send:                        ;Sends the send buffer.
+   
+    push 0                  ;flags arg (not required)
+    push SIZE_OF_SEND_BUFF   ;push arguments
+    push send_buffer
+    ;mov edx, [sock_desc]
+    push edx
+    
+    mov ecx, esp            ;save pointer to args
+    mov eax, SYS_SOCKETCALL  ; select sys calls.
+    mov ebx, SYS_SOCK_SEND
+    int 80h                 ;ring ring
+   
+
+    pusha
+    xor ecx, ecx
+    mov edx, SIZE_OF_REC_BUFF ;write message
+    mov ecx, rec_buffer
+    mov ebx, 1
+    mov eax, 4
+    int 80h
+    popa
+    
+    ret
