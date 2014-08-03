@@ -22,27 +22,84 @@
 
 section .text
 
+error:          ;called if there is an error. TODO: Make this take arguments and output more appropriate error messages.
+    pusha
+    mov edx, Errormsg_len
+    mov ecx, Errormsg
+    mov ebx, 1
+    mov eax, 4
+    int 80h
+
+    jmp exit
+
+    
+
+
 send:                        ;Sends the send buffer.
    
     push 0                  ;flags arg (not required)
     push SIZE_OF_SEND_BUFF   ;push arguments
     push send_buffer
-    ;mov edx, [sock_desc]
-    push edx
+    ;push edx
+    push WORD [sock_desc]
     
     mov ecx, esp            ;save pointer to args
     mov eax, SYS_SOCKETCALL  ; select sys calls.
     mov ebx, SYS_SOCK_SEND
     int 80h                 ;ring ring
-   
-
-    pusha
-    xor ecx, ecx
-    mov edx, SIZE_OF_REC_BUFF ;write message
-    mov ecx, rec_buffer
-    mov ebx, 1
-    mov eax, 4
-    int 80h
-    popa
+  
+    add esp, 16             ;clear the stack  
     
+    ret
+
+
+recv:                       ;Receives stuff into rec buffer
+
+    mov eax, SYS_SOCKETCALL 
+    mov ebx, SYS_SOCK_RECV
+
+    push 0
+    push SIZE_OF_REC_BUFF
+    push rec_buffer
+    ;push edx
+    push WORD [sock_desc]
+    
+    mov ecx, esp
+    int 80h
+    
+    cmp eax, 0
+    jg recv_ret ;If the connection has been made, Lets get going!
+    jl error ; else, we should error.
+
+recv_ret:
+    add esp, 16     ;clear the stack
+    ret             ;return.
+
+chk_recv:                   ;Check the received string contains the string pointed to by the first stack element (esp)
+      
+      pop ecx               ;we call this with the amount of characters to check
+      mov eax, cmp_buffer   ;move the comparason buffer to eax
+      mov ebx, rec_buffer   ;Move the received string to ebx
+      xor edx, edx          ;make sure edx is empty
+cr_loop:
+
+      cmp edx, ecx          ; compare the amount of characters to check against the amount checked.
+      je cr_loop_done       
+
+      inc edx
+
+      cmp [cmp_buffer+edx], [rec_buffer+edx] ;compare the starts of the strings.
+      je cr_loop
+      jne cr_loop_false
+
+cr_loop_done:
+    
+    pop ecx
+    push 1
+    push ecx
+    ret
+
+cr_loop_false:
+    mov  [send_buffer], [ERR_501]
+    call send
     ret
