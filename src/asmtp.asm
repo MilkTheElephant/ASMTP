@@ -16,25 +16,18 @@
 ;
 ;=============================================
 
+;TODO: Put everything into nicer functions in funcs.inc. Make those functions useable multiple times.
+
 global _start
 
 %include 'data.inc'
-;%include 'funcs.inc'
+%include 'funcs.inc'
 
 section .text 
 
 jmp _start
 
-error:          ;called if there is an error. TODO: Make this take arguments and output more appropriate error messages.
-    pusha
-    mov edx, Errormsg_len
-    mov ecx, Errormsg
-    mov ebx, 1
-    mov eax, 4
-    int 80h
-
-    jmp exit
-     
+   
 
 
 ;===Entry Point======================================
@@ -58,6 +51,7 @@ _start:
     mov ecx, Startmsg
     mov ebx, 1
     mov eax, 4
+
     int 80h
     popa    
     
@@ -119,9 +113,6 @@ listen:
     push edx
 
     mov eax, SYS_SOCKETCALL   ;socketcall           
-%define PORT               25
-
-%define LISTEN_LIMIT       30
     mov ebx, SYS_SOCK_LISTEN  ;sock listen
     mov ecx, esp              ;push pointer to args
       
@@ -137,13 +128,14 @@ accept:
 
     push 0                  ;We dont need any info, but we still need to pass all args
     push 0                      
+    mov edx, [sock_desc]
     push edx                ;push  File descriptor
     mov ecx, esp            ;make ecx point to arguments
     int 80h                 ;Telephone Mr Kernel
 
     mov edx, eax            ;save result in edx
 
-greet_str:
+greet:
     
     mov esi, CMD_220        ;point esi to string we're moving
     mov edi, send_buffer      ;point edi to where we're moving it to.
@@ -158,47 +150,38 @@ greet_str:
     rep movsb               ; Move bytes. repeat for length of string
 
                             ;send_buffer should now equal something like "220 [domain]
+  
+    call send               ;send the send buffer.
+    ;mov edx, [sock_desc]
+    ;push edx               ;We have to hope that edx contains the socket file descriptor because i cant actually put it in here without it erroring.
 
-
-    pusha
-    xor ecx, ecx
-    mov edx, SIZE_OF_SEND_BUFF ; show message cmd buff contents
-    mov ecx, send_buffer
+    call recv               ;wait for a reply
+    
+     
+    push '4'                ;length of the phrase we're comparing:
+    mov DWORD [cmp_buffer], 'HELO'      ;string we're comparing
+    call chk_recv
+    
+    pop eax
+    cmp eax, 1
+    jne error
+    push SIZE_OF_EXTERN_DOMAIN  ;push the size of buffer to retreve.  
+    call get_domain         ;gets the domain that the client sent
+     
+      
+    push SIZE_OF_EXTERN_DOMAIN
+    push external_domain
+    mov edx, SIZE_OF_EXTERN_DOMAIN
+    mov ecx, external_domain
     mov ebx, 1
     mov eax, 4
     int 80h
-    popa
-    
-    ;call send
-     
        
     
 
-send: 
-    
-    push 0                  ;flags arg (not required)
-    push SIZE_OF_SEND_BUFF   ;push arguments
-    push send_buffer
-    mov edx, [sock_desc]
-    push edx
-    
-    mov ecx, esp            ;save pointer to args
-    mov eax, SYS_SOCKETCALL  ; select sys calls.
-    mov ebx, SYS_SOCK_SEND
-    int 80h                 ;ring ring
-   
-
-    pusha
-    xor ecx, ecx
-    mov edx, SIZE_OF_REC_BUFF ;write message
-    mov ecx, rec_buffer
-    mov ebx, 1
-    mov eax, 4
-    int 80h
-    popa    
     
     
-recv:
+;recv:
     mov eax, SYS_SOCKETCALL 
     mov ebx, SYS_SOCK_RECV
 
@@ -206,13 +189,13 @@ recv:
     push SIZE_OF_REC_BUFF
     push rec_buffer
     push edx
-    
+   
     mov ecx, esp
     int 80h
-    
+   
     cmp eax, 0
-    jg start_talking ;If the connection has been made, Lets get going!
-    jl error ; else, we should error.
+   ;jg start_talking ;If the connection has been made, Lets get going!
+   jl error ; else, we should error.
 
     pusha
     xor ecx, ecx
@@ -224,7 +207,7 @@ recv:
     popa    
 
 
-start_talking:
+;start_talking:
 
     mov al, 'H'             ;move H to al
     mov ebx, rec_buffer     ;make ebx = rec_buff

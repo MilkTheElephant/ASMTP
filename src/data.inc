@@ -35,6 +35,9 @@ section .data
 ;
 ;==============================================================
     
+    ERR_501             db '501 - Command not recognised'
+    ERR_501_len         equ '28'
+
     CMD_220             db '220'
     CMD_220_len         equ 3
     CMD_250             db '250'
@@ -62,14 +65,13 @@ section .data
 %define SYS_SOCK_SEND      9
 %define SYS_SOCK_RECV      10
 %define SYS_SOCK_SHUTDOWN  13
-
 %define SOCK_STREAM        1
-
 %define AF_INET            2
-
 %define IPPROTO_TCP        6
-
 %define INADDR_ANY         0
+
+%define SIZE_OF_SOCK_INFO  6
+%define SIZE_OF_EXTERN_DOMAIN  32
 
 ;================================================
 
@@ -106,5 +108,7 @@ section .bss
     rec_buffer:  resb SIZE_OF_REC_BUFF   ;reserve memory for incomming commands.
     msgbuffer: resb 1024*1024*32 ;reserve 32MB for the message
     sock_desc: resb 4    ;reserve 4 bytes for the socket file descriptor
-
+    socket_info: resb SIZE_OF_SOCK_INFO  ;reserve 6 bytes for the return of getsockinfo
+    cmp_buffer:  resb SIZE_OF_REC_BUFF   ;reserve bytes in order to compare received strings to commands.
+    external_domain:    resb   SIZE_OF_EXTERN_DOMAIN    ;bytes to store the client's donain.
 ;==============================================
