@@ -71,6 +71,7 @@ section .data
 %define INADDR_ANY         0
 
 %define SIZE_OF_SOCK_INFO  6
+%define SIZE_OF_EXTERN_DOMAIN  32
 
 ;================================================
 
@@ -109,5 +110,5 @@ section .bss
     sock_desc: resb 4    ;reserve 4 bytes for the socket file descriptor
     socket_info: resb SIZE_OF_SOCK_INFO  ;reserve 6 bytes for the return of getsockinfo
     cmp_buffer:  resb SIZE_OF_REC_BUFF   ;reserve bytes in order to compare received strings to commands.
-
+    external_domain:    resb   SIZE_OF_EXTERN_DOMAIN    ;bytes to store the client's donain.
 ;==============================================

@@ -128,6 +128,7 @@ accept:
 
     push 0                  ;We dont need any info, but we still need to pass all args
     push 0                      
+    mov edx, [sock_desc]
     push edx                ;push  File descriptor
     mov ecx, esp            ;make ecx point to arguments
     int 80h                 ;Telephone Mr Kernel
@@ -151,34 +152,33 @@ greet:
                             ;send_buffer should now equal something like "220 [domain]
   
     call send               ;send the send buffer.
-    
+    ;mov edx, [sock_desc]
+    ;push edx               ;We have to hope that edx contains the socket file descriptor because i cant actually put it in here without it erroring.
+
     call recv               ;wait for a reply
-    jmp start_talking
+    
+     
+    push '4'                ;length of the phrase we're comparing:
+    mov DWORD [cmp_buffer], 'HELO'      ;string we're comparing
+    call chk_recv
+    
+    pop eax
+    cmp eax, 1
+    jne error
+    push SIZE_OF_EXTERN_DOMAIN  ;push the size of buffer to retreve.  
+    call get_domain         ;gets the domain that the client sent
+     
+      
+    push SIZE_OF_EXTERN_DOMAIN
+    push external_domain
+    mov edx, SIZE_OF_EXTERN_DOMAIN
+    mov ecx, external_domain
+    mov ebx, 1
+    mov eax, 4
+    int 80h
        
     
 
-;send: 
-    
-;    push 0                  ;flags arg (not required)
-;    push SIZE_OF_SEND_BUFF   ;push arguments
-;    push send_buffer
-;    mov edx, [sock_desc]
-;    push edx
-    
-;    mov ecx, esp            ;save pointer to args
-;    mov eax, SYS_SOCKETCALL  ; select sys calls.
-;    mov ebx, SYS_SOCK_SEND
-;    int 80h                 ;ring ring
-   
-
-;    pusha
-;    xor ecx, ecx
-;    mov edx, SIZE_OF_REC_BUFF ;write message
-;    mov ecx, rec_buffer
-;    mov ebx, 1
-;    mov eax, 4
-;    int 80h
-;    popa    
     
     
 ;recv:
@@ -194,7 +194,7 @@ greet:
     int 80h
    
     cmp eax, 0
-    jg start_talking ;If the connection has been made, Lets get going!
+   ;jg start_talking ;If the connection has been made, Lets get going!
    jl error ; else, we should error.
 
     pusha
@@ -207,7 +207,7 @@ greet:
     popa    
 
 
-start_talking:
+;start_talking:
 
     mov al, 'H'             ;move H to al
     mov ebx, rec_buffer     ;make ebx = rec_buff

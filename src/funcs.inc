@@ -33,6 +33,14 @@ error:          ;called if there is an error. TODO: Make this take arguments and
     jmp exit
 
     
+print:
+    
+    pop edx
+    pop ecx
+    mov ebx, 1
+    mov eax, 4
+    int 80h
+    ret
 
 
 send:                        ;Sends the send buffer.
@@ -40,8 +48,8 @@ send:                        ;Sends the send buffer.
     push 0                  ;flags arg (not required)
     push SIZE_OF_SEND_BUFF   ;push arguments
     push send_buffer
-    ;push edx
-    push WORD [sock_desc]
+    push edx
+    ;push WORD [sock_desc]
     
     mov ecx, esp            ;save pointer to args
     mov eax, SYS_SOCKETCALL  ; select sys calls.
@@ -54,15 +62,15 @@ send:                        ;Sends the send buffer.
 
 
 recv:                       ;Receives stuff into rec buffer
-
+    ;pop edx
     mov eax, SYS_SOCKETCALL 
     mov ebx, SYS_SOCK_RECV
 
     push 0
     push SIZE_OF_REC_BUFF
     push rec_buffer
-    ;push edx
-    push WORD [sock_desc]
+    ;mov edx, sock_desci        ;Okay, this doesnt work, so we have to just use this and HOPE that edx still contains the socket file descriptor.
+    push edx
     
     mov ecx, esp
     int 80h
@@ -87,8 +95,13 @@ cr_loop:
       je cr_loop_done       
 
       inc edx
+      add eax, edx
+      add ebx, edx
+      mov eax, [eax]
+      mov ebx, [ebx]   
+      cmp eax, ebx ;compare the starts of the strings.
 
-      cmp [cmp_buffer+edx], [rec_buffer+edx] ;compare the starts of the strings.
+     
       je cr_loop
       jne cr_loop_false
 
@@ -100,6 +113,46 @@ cr_loop_done:
     ret
 
 cr_loop_false:
-    mov  [send_buffer], [ERR_501]
+     
+    mov esi, ERR_501        ;point esi to wards the string we're moving
+    mov edi,  send_buffer   ;point edi towards the string we're moving it too 
+    mov ecx, ERR_501_len    ;move the length of ecx
+    rep movsb               ;copy.
+
     call send
     ret
+
+
+get_domain:         ;This function returns a string (in client_domain) which is taken from the received "HELO" string.
+   
+    mov ebx, 24
+   
+initialcheck:
+    add ebx, 8
+    mov eax, [rec_buffer+ebx] ;move into eax the character that should be the start of the external domain.
+    cmp eax, 0x20    ;compare EAX to the space character
+    jne initialcheck      ;if the character we checked is a space, then jump to recheck 
+  
+    push ebx             ;push if the char isnt a space, push the starting char of the domain. 
+recheck:
+   add ebx, 8
+    
+    mov eax, [rec_buffer+ebx]
+    cmp eax, 0x20
+    jne recheck
+    
+copystr:
+    pop eax
+    lea eax, [rec_buffer+eax]
+    mov esi, eax
+    mov edi, external_domain
+    mov ecx, edx
+    
+   jmp exit 
+
+
+
+
+
+
+
