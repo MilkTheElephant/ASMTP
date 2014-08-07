@@ -158,10 +158,11 @@ greet:
     call recv               ;wait for a reply
     
      
-    push '4'                ;length of the phrase we're comparing:
+    push 1                ;length of the phrase we're comparing. Cannot be higher than 255
     mov DWORD [cmp_buffer], 'HELO'      ;string we're comparing
     call chk_recv
-    
+   
+    jmp error 
     pop eax
     cmp eax, 1
     jne error

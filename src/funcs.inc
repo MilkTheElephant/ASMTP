@@ -84,26 +84,29 @@ recv_ret:
     ret             ;return.
 
 chk_recv:                   ;Check the received string contains the string pointed to by the first stack element (esp)
-      
-      pop ecx               ;we call this with the amount of characters to check
-      mov eax, cmp_buffer   ;move the comparason buffer to eax
-      mov ebx, rec_buffer   ;Move the received string to ebx
-      xor edx, edx          ;make sure edx is empty
+    
+    
+    pop cx               ;we call this with the amount of characters to check
+    mov eax, [cmp_buffer]   ;move the comparason buffer to eax
+    mov ebx, [rec_buffer]   ;Move the received string to ebx
+    ;xor edx, edx          ;make sure edx is empty
+    
+    cmp eax, ebx
+    jne error
+    
 cr_loop:
+   
+    cmp cl, ch            ; compare the amount of characters to check against the amount checked.
+    je cr_loop_done       
 
-      cmp edx, ecx          ; compare the amount of characters to check against the amount checked.
-      je cr_loop_done       
+    inc ch                 ;incrememt the counter.
+;    add eax, 8
+;    add ebx, 8
+    cmp eax, ebx ;compare the starts of the strings.
 
-      inc edx
-      add eax, edx
-      add ebx, edx
-      mov eax, [eax]
-      mov ebx, [ebx]   
-      cmp eax, ebx ;compare the starts of the strings.
-
-     
-      je cr_loop
-      jne cr_loop_false
+    
+     je cr_loop
+     jne cr_loop_false
 
 cr_loop_done:
     
@@ -116,10 +119,11 @@ cr_loop_false:
      
     mov esi, ERR_501        ;point esi to wards the string we're moving
     mov edi,  send_buffer   ;point edi towards the string we're moving it too 
-    mov ecx, ERR_501_len    ;move the length of ecx
+    mov ecx, 28    ;move the length of ecx
     rep movsb               ;copy.
-
-    call send
+    
+    jmp error
+    ;call send
     ret
 
 
@@ -149,10 +153,4 @@ copystr:
     mov ecx, edx
     
    jmp exit 
-
-
-
-
-
-
 
