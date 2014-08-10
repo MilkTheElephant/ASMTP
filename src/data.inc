@@ -7,7 +7,7 @@
 
 ;===User defineable defines==================================
 
-    %define PORT 25                  ;port
+    %define PORT 4455                  ;port
     %define LISTEN_LIMIT   30        ;Amount of requests to queue
     %define SIZE_OF_SEND_BUFF    64   ;Size of the command buffer (You shouldent need to change this unless you add longer commands)
     %define SIZE_OF_REC_BUFF    64   ;size of the buffer for incomming commands. (As above)

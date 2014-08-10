@@ -83,26 +83,36 @@ recv_ret:
     add esp, 16     ;clear the stack
     ret             ;return.
 
-chk_recv:                   ;Check the received string contains the string pointed to by the first stack element (esp)
+chk_recv:                   ;Check the received string contains the string pointed to by the first stack element 
+break:
     
     
-    pop cx               ;we call this with the amount of characters to check
-    mov eax, [cmp_buffer]   ;move the comparason buffer to eax
-    mov ebx, [rec_buffer]   ;Move the received string to ebx
+    ;pop cx               ;we call this with the amount of characters to check
+    mov cx, 4
+    ;mov eax, [cmp_buffer]   ;move the comparason buffer to eax
+    ;mov ebx, [rec_buffer]   ;Move the received string to ebx
+    mov eax, 'H'
+    xor ebx, ebx
+    mov ebx, [rec_buffer]
     ;xor edx, edx          ;make sure edx is empty
     
-    cmp eax, ebx
-    jne error
-    
+    cmp al, bl              ;Compare only the lower 8 bits, because a char isnt going to be more than 8 bits is it!
+    jne exit
+    cmp cl, 1               ;If we're only meant to be comparing one characer, the jump to done.
+    je cr_loop_done              ;If equal, then we should start checking the other letters.
+    ;jl error                ;If lower, then...well we really shouldent be comparing les than one The thats not right.
+    jmp exit
+
+
 cr_loop:
    
     cmp cl, ch            ; compare the amount of characters to check against the amount checked.
     je cr_loop_done       
 
-    inc ch                 ;incrememt the counter.
-;    add eax, 8
-;    add ebx, 8
-    cmp eax, ebx ;compare the starts of the strings.
+    inc ch                ;incrememt the counter.
+    mov eax, [cmp_buffer+8] 
+    add ebx, [rec_buffer+8] 
+    cmp al, bl ;compare the starts of the strings.
 
     
      je cr_loop
