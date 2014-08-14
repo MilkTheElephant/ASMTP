@@ -83,8 +83,10 @@ recv_ret:
     add esp, 16     ;clear the stack
     ret             ;return.
 
+
+    
 chk_recv:                   ;Check the received string contains the string pointed to by the first stack element 
-break:
+
     
     
     ;pop cx               ;we call this with the amount of characters to check
@@ -101,11 +103,11 @@ break:
     cmp cl, 1               ;If we're only meant to be comparing one characer, the jump to done.
     je cr_loop_done              ;If equal, then we should start checking the other letters.
     ;jl error                ;If lower, then...well we really shouldent be comparing les than one The thats not right.
-    jmp exit
+;    jmp exit
 
 
 cr_loop:
-   
+break:
     cmp cl, ch            ; compare the amount of characters to check against the amount checked.
     je cr_loop_done       
 
