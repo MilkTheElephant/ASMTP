@@ -93,6 +93,14 @@ section .data
     Startmsg            db 'Starting...',10
     Startmsg_len        equ 13
 
+;==== Protocol strings ========================
+;
+;   These strings are part of the SMTP protocol.
+;   They are used mostly in comparing the strings received 
+;
+;=============================================  
+    HELO               db 'HELO'
+    HELO_len           equ 4
 ;===============================================
 
 section .bss

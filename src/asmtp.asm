@@ -159,7 +159,13 @@ greet:
     
      
     push 2                ;length of the phrase we're comparing. Cannot be higher than 255
-    mov DWORD [cmp_buffer], 'HELO'      ;string we're comparing
+   ; mov cmp_buffer, HELO      ;string we're comparing
+    mov esi, HELO
+    mov edi, cmp_buffer
+    cld
+    mov ecx, HELO_len
+    rep movsb 
+
     call chk_recv
    
     jmp error 

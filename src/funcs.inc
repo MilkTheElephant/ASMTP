@@ -68,16 +68,18 @@ recv:                       ;Receives stuff into rec buffer
 
     push 0
     push SIZE_OF_REC_BUFF
-    push rec_buffer
+    mov ecx, DWORD [rec_buffer]
+    push ecx 
     ;mov edx, sock_desci        ;Okay, this doesnt work, so we have to just use this and HOPE that edx still contains the socket file descriptor.
     push edx
     
     mov ecx, esp
     int 80h
     
+    mov ecx, rec_buffer
     cmp eax, 0
     jg recv_ret ;If the connection has been made, Lets get going!
-    jl error ; else, we should error.
+    ;jl error ; else, we should error.
 
 recv_ret:
     add esp, 16     ;clear the stack
@@ -90,18 +92,18 @@ chk_recv:                   ;Check the received string contains the string point
     
     
     ;pop cx               ;we call this with the amount of characters to check
-    mov cx, 4
+    mov cl, 1*8-8
+    mov ch, 0
     ;mov eax, [cmp_buffer]   ;move the comparason buffer to eax
     ;mov ebx, [rec_buffer]   ;Move the received string to ebx
     mov eax, 'H'
-    xor ebx, ebx
     mov ebx, [rec_buffer]
     ;xor edx, edx          ;make sure edx is empty
     
     cmp al, bl              ;Compare only the lower 8 bits, because a char isnt going to be more than 8 bits is it!
     jne exit
-    cmp cl, 1               ;If we're only meant to be comparing one characer, the jump to done.
-    je cr_loop_done              ;If equal, then we should start checking the other letters.
+    cmp cl, 0               ;If we're only meant to be comparing one characer, the jump to done.
+    je cr_loop              ;If equal, then we should start checking the other letters.
     ;jl error                ;If lower, then...well we really shouldent be comparing les than one The thats not right.
 ;    jmp exit
 
@@ -111,13 +113,17 @@ break:
     cmp cl, ch            ; compare the amount of characters to check against the amount checked.
     je cr_loop_done       
 
-    inc ch                ;incrememt the counter.
-    mov eax, [cmp_buffer+8] 
-    add ebx, [rec_buffer+8] 
+    add ch, 8                ;incrememt the counter.
+    mov esi, cmp_buffer
+    mov edi, rec_buffer
+    mov eax, [esi+ebx]
+    mov ebx,[edi+ebx]
+    ;mov eax, [cmp_buffer+ch*8]
+    ;mov  ebx, [rec_buffer+ch*8]
     cmp al, bl ;compare the starts of the strings.
-
-    
-     je cr_loop
+cmptst:
+   je exit 
+     ;je cr_loop
      jne cr_loop_false
 
 cr_loop_done:
