@@ -68,7 +68,7 @@ recv:                       ;Receives stuff into rec buffer
 
     push 0
     push SIZE_OF_REC_BUFF
-    mov ecx, DWORD [rec_buffer]
+    mov ecx, rec_buffer
     push ecx 
     ;mov edx, sock_desci        ;Okay, this doesnt work, so we have to just use this and HOPE that edx still contains the socket file descriptor.
     push edx
@@ -101,15 +101,24 @@ chk_recv:                   ;Check the received string contains the string point
     ;xor edx, edx          ;make sure edx is empty
     
     cmp al, bl              ;Compare only the lower 8 bits, because a char isnt going to be more than 8 bits is it!
-    jne exit
+    je cr_loop 
+    jne error               ; For now, if the string's first letter is wrong, just error == TODO Make sure to send the right error ad support EHLO message erroring. ==
     cmp cl, 0               ;If we're only meant to be comparing one characer, the jump to done.
-    je cr_loop              ;If equal, then we should start checking the other letters.
+    je cr_loop              ;If equa, then we should start checking the other letters.
     ;jl error                ;If lower, then...well we really shouldent be comparing les than one The thats not right.
 ;    jmp exit
 
 
 cr_loop:
 break:
+    
+    mov eax, dbg1_len
+    push eax
+    mov eax, dbg1
+    push eax
+    call print
+
+    
     cmp cl, ch            ; compare the amount of characters to check against the amount checked.
     je cr_loop_done       
 

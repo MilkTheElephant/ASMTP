@@ -44,7 +44,7 @@ _start:
 ;    xor ecx, ecx
 ;    xor edx, edx
 ;    int 80h
-   
+print_brk:   
     pusha
     xor ecx, ecx
     mov edx, Startmsg_len ;write message

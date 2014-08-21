@@ -7,7 +7,7 @@
 
 ;===User defineable defines==================================
 
-    %define PORT 4455                  ;port
+    %define PORT 4465                  ;port
     %define LISTEN_LIMIT   30        ;Amount of requests to queue
     %define SIZE_OF_SEND_BUFF    64   ;Size of the command buffer (You shouldent need to change this unless you add longer commands)
     %define SIZE_OF_REC_BUFF    64   ;size of the buffer for incomming commands. (As above)
@@ -91,7 +91,7 @@ section .data
     Threadmsg_len       equ 19
 
     Startmsg            db 'Starting...',10
-    Startmsg_len        equ 13
+    Startmsg_len        equ 12
 
 ;==== Protocol strings ========================
 ;
@@ -120,3 +120,12 @@ section .bss
     cmp_buffer:  resb SIZE_OF_REC_BUFF   ;reserve bytes in order to compare received strings to commands.
     external_domain:    resb   SIZE_OF_EXTERN_DOMAIN    ;bytes to store the client's donain.
 ;==============================================
+
+;=== Debug strings ===========================
+;   These strings are used for debug messages.
+;=============================================
+   section .data 
+    dbg1:    db 'Cheacked first letter as correct',10
+    dbg1_len:   equ 33
+    dbg2:   db  'Into the second loop',10
+    dbg2_len    equ 21
