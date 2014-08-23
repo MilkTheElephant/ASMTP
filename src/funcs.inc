@@ -94,42 +94,57 @@ chk_recv:                   ;Check the received string contains the string point
     ;pop cx               ;we call this with the amount of characters to check
     mov cl, 1*8-8
     mov ch, 0
-    ;mov eax, [cmp_buffer]   ;move the comparason buffer to eax
-    ;mov ebx, [rec_buffer]   ;Move the received string to ebx
-    mov eax, 'H'
-    mov ebx, [rec_buffer]
-    ;xor edx, edx          ;make sure edx is empty
-    
+    mov eax, [cmp_buffer]            ;move first letter to eax.
+    mov ebx, [rec_buffer]   ; move first letter to ebx
+       
     cmp al, bl              ;Compare only the lower 8 bits, because a char isnt going to be more than 8 bits is it!
-    je cr_loop 
+    je cr_loop_srt 
     jne error               ; For now, if the string's first letter is wrong, just error == TODO Make sure to send the right error ad support EHLO message erroring. ==
-    cmp cl, 0               ;If we're only meant to be comparing one characer, the jump to done.
-    je cr_loop              ;If equa, then we should start checking the other letters.
-    ;jl error                ;If lower, then...well we really shouldent be comparing les than one The thats not right.
-;    jmp exit
+    cmp cl, 0               ;If we're only meant to be comparing one character, the jump to done.
+    je cr_loop_done         ;If equal, then we should start checking the other letters.
+    jl error                ;If lower, then...well we really shouldent be comparing less than one letters,  The thats not right.
+    jmp error               ;None of the above? oh dear, bail out.
+
+
+cr_loop_srt:
+
+cmp cl, ch
+je cr_loop_done
+
+add ch, 8               ; increment ch because we cant do it anywhere else.
 
 
 cr_loop:
 break:
     
-    mov eax, dbg1_len
-    push eax
-    mov eax, dbg1
-    push eax
-    call print
+    pusha
+    xor ecx, ecx
+    mov edx, dbg1_len ;write message
+    mov ecx, dbg1 
+    mov ebx, 1
+    mov eax, 4
+
+    int 80h
+    popa    
 
     
     cmp cl, ch            ; compare the amount of characters to check against the amount checked.
-    je cr_loop_done       
+    je cr_loop_done       ;If they're equal then jump to done
 
-    add ch, 8                ;incrememt the counter.
+    add ch, 8             ;incrememt the counter.
     mov esi, cmp_buffer
     mov edi, rec_buffer
-    mov eax, [esi+ebx]
-    mov ebx,[edi+ebx]
+    xor edx, edx
+    mov dl, cl
+brk_chk:
+    mov eax, [esi+edx]
+    mov ebx,[edi+edx]
     ;mov eax, [cmp_buffer+ch*8]
     ;mov  ebx, [rec_buffer+ch*8]
     cmp al, bl ;compare the starts of the strings.
+    jne error
+    je cr_loop
+
 cmptst:
    je exit 
      ;je cr_loop
